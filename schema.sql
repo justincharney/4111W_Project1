@@ -22,13 +22,40 @@ CREATE TABLE DeloadTrainingPlan(
 );
 
 
--- WORK IN PROGRESS. Probably going to add some foreign keys for the relationship with TrainingPlan etc.
+-- Added foreign keys for the (exactly one) relationship with TrainingPlan and User.
 CREATE TABLE WORKOUT(
-    WorkoutID INTEGER PRIMARY KEY,
+    WorkoutId INTEGER PRIMARY KEY,
     SequenceNumber INTEGER NOT NULL,
     ScheduluedDate DATETIME NOT NULL,
     PerformedDate DATETIME, -- Can be NULL, since we will schedule Workouts to be performed in the future
     Stress INTEGER NOT NULL,
     Soreness INTEGER NOT NULL,
-    SleepQuality INTEGER NOT NULL
+    SleepQuality INTEGER NOT NULL,
+    TrainingPlanId INTEGER NOT NULL,
+    PerformingUserId INTEGER NOT NULL,
+    FOREIGN KEY (TrainingPlanId) REFERENCES TrainingPlan(TrainingPlanId) ON DELETE CASCADE,
+    FOREIGN KEY (PerformingUserId) REFERENCES User(UserId) ON DELETE CASCADE
+);
+
+-- Cannot currently capture constraint that MinSets <= MaxSets. Same for MinReps and MaxReps.
+CREATE TABLE WorkoutExercise(
+    WorkoutExerciseId INTEGER PRIMARY KEY,
+    MinSets INTEGER NOT NULL,
+    MaxSets INTEGER, -- Might be NULL until the workout is started, and then we set this based on their "readiness" score
+    ExerciseOrder INTEGER NOT NULL,
+    UsesExerciseId INTEGER NOT NULL,
+    IncludedInWorkoutId INTEGER NOT NULL,
+    FOREIGN KEY (UsesExercise) REFERENCES Exercise(ExerciseId) ON DELETE CASCADE,.
+    FOREIGN KEY (IncludedInWorkout) REFERENCES Workout(WorkoutId) ON DELETE CASCADE
+);
+
+-- WorkoutSet is part of a weak entity set
+CREATE TABLE WorkoutSet_ForWorkoutExercise(
+    WorkoutExerciseId INTEGER,
+    SetId INTEGER, -- Specifies the order of the set in the WorkoutExercise
+    MinReps INTEGER NOT NULL,
+    MaxReps INTEGER NOT NULL,
+    Weight INTEGER, -- Might be NULL for example on the first workout when we have no reference to go on for the weight
+    PRIMARY KEY(WorkoutExerciseId, SetId),
+    FOREIGN KEY (WorkourExerciseId) REFERENCES WorkoutExercise(WorkoutExerciseId) ON DELETE CASCADE
 );

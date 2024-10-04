@@ -86,7 +86,7 @@ CREATE TABLE Follows(
 );
 
 -- Performs (User --> Workout)
-CREATE TABLE Performs (
+CREATE TABLE Performs(
     UserID INTEGER,
     WorkoutID INTEGER,
     PRIMARY KEY (UserID, WorkoutID),
@@ -94,3 +94,38 @@ CREATE TABLE Performs (
     FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID)
 );
 
+-- Contains (Workout --> WorkoutExercise)
+CREATE TABLE Contains(
+    WorkoutID INTEGER,
+    WorkoutExerciseID INTEGER,
+    PRIMARY KEY (WorkoutID, WorkoutExerciseID),
+    FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID),
+    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID)
+);
+
+-- Includes (WorkoutExercise --> Exercise)
+CREATE TABLE Includes(
+    WorkoutExerciseID INTEGER,
+    ExerciseID INTEGER,
+    PRIMARY KEY (WorkoutExerciseID, ExerciseID),
+    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID),
+    FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
+);
+
+-- Records (PerformanceLog --> Exercise)
+CREATE TABLE Records(
+    PerformanceLogID INTEGER,
+    ExerciseID INTEGER,
+    PRIMARY KEY (PerformanceLogID, ExerciseID),
+    FOREIGN KEY (PerformanceLogID) REFERENCES PerformanceLog(PerformanceLogID),
+    FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
+);
+
+-- Involves (WorkoutExercise --> WorkoutSet)
+CREATE TABLE Involves(
+    WorkoutExerciseID INTEGER,
+    WorkoutSetID INTEGER,
+    PRIMARY KEY (WorkoutExerciseID, WorkoutSetID),
+    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID),
+    FOREIGN KEY (WorkoutSetID) REFERENCES WorkoutSet(WorkoutSetID)
+);

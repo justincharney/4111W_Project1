@@ -60,24 +60,22 @@ CREATE TABLE WorkoutSet_ForWorkoutExercise(
     FOREIGN KEY (WorkoutExerciseId) REFERENCES WorkoutExercise(WorkoutExerciseId) ON DELETE CASCADE
 );
 
--- PerformanceLog w/o constraints
+-- PerformanceLog
 CREATE TABLE PerformanceLog(
     PerformanceLogID INTEGER PRIMARY KEY,
     DateTime DATETIME,
     SetsCompleted INTEGER,
     RepsCompleted INTEGER,
     WeightUsed FLOAT,
-    Estimated1RM FLOAT,
-    PerformedDate TIMESTAMP, -- I changed this to TIMESTAMP as it is like this in Workout
-    Stress INTEGER,
-    Soreness INTEGER,
-    SleepQuality INTEGER
+    Estimated1RM FLOAT
 );
 
--- Exercise w/o constraints
+-- Exercise 
 CREATE TABLE Exercise(
     ExerciseID INTEGER PRIMARY KEY,
-    Name VARCHAR(100) NOT NULL
+    ExerName CHAR(20) NOT NULL,
+    ExerDescription CHAR(100),
+    IsMainLift BOOLEAN
 );
 
 

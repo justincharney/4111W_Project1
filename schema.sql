@@ -1,6 +1,6 @@
 CREATE TABLE User(
     UserID INTEGER PRIMARY KEY,
-    Name VARCHAR(50) NOT NULL,
+    Username VARCHAR(50) NOT NULL,
     Age INTEGER NOT NULL,
     Gender VARCHAR(1) NOT NULL,
     BodyWeight DECIMAL(5, 2) NOT NULL -- Can be in the range [-999.99, 999.99],
@@ -10,7 +10,7 @@ CREATE TABLE User(
 CREATE TABLE TrainingPlan(
     TrainingPlanID INTEGER PRIMARY KEY,
     Level VARCHAR(50) NOT NULL,
-    IsDeload BOOLEAN NOT NULL, -- Can be 0 for False and 1 for True Kostas: Apparently, BOOLEAN is preferred in PostgreSQL
+    IsDeload BOOLEAN NOT NULL, -- Can be 0 for False and 1 for True
     VolumeAdjustmentPercentage DECIMAL(3, 2), -- Can be in the range [-9.99, 9.99]
 );
 
@@ -145,3 +145,5 @@ CREATE TABLE Uses(
 -- 2. WorkoutExercise could be merged with Uses if standalone in a binary relationship with Exercise,
 -- but it is currently involved in a few other relationships, so we will have to omit the
 -- participation constraint
+
+-- 3.PerformanceLog participation constraint cannot be captured at the moment.

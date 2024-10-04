@@ -49,7 +49,7 @@ CREATE TABLE WorkoutExercise(
     FOREIGN KEY (IncludedInWorkout) REFERENCES Workout(WorkoutId) ON DELETE CASCADE
 );
 
--- WorkoutSet is part of a weak entity set
+-- WorkoutSet is part of a weak entity set, merged with Involves
 CREATE TABLE WorkoutSet_ForWorkoutExercise(
     WorkoutExerciseId INTEGER,
     SetId INTEGER, -- Specifies the order of the set in the WorkoutExercise
@@ -83,10 +83,10 @@ CREATE TABLE Exercise(
 
 -- Relationship set from here on --
 
--- Follows (User --> Training Plan)
+-- Follows (User --> Training Plan): We can't enforce that every User is associated with a TrainingPlan
 CREATE TABLE Follows(
-    UserID INTEGER,
-    TrainingPlanID INTEGER,
+    UserID INTEGER NOT NULL,
+    TrainingPlanID INTEGER NOT NULL,
     PRIMARY KEY (UserID, TrainingPlanID),
     FOREIGN KEY (UserID) REFERENCES User(UserID),
     FOREIGN KEY (TrainingPlanID) REFERENCES TrainingPlan(TrainingPlanID)
@@ -106,7 +106,7 @@ CREATE TABLE Performs(
 CREATE TABLE Contains(
     WorkoutID INTEGER,
     WorkoutExerciseID INTEGER,
-    PRIMARY KEY (WorkoutID, WorkoutExerciseID),
+    PRIMARY KEY (WorkoutID),  -- Key constraint
     FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID),
     FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID)
 );
@@ -129,12 +129,8 @@ CREATE TABLE Records(
     FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
 );
 
--- Involves (WorkoutExercise --> WorkoutSet)
-CREATE TABLE Involves(
-    WorkoutExerciseID INTEGER,
-    WorkoutSetID INTEGER,
-    PRIMARY KEY (WorkoutExerciseID, WorkoutSetID),
-    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID),
-    FOREIGN KEY (WorkoutSetID) REFERENCES WorkoutSet(WorkoutSetID)
-);
 
+-- NOTE: Workout is linked to Contains and Performs with a total participation constraint 
+-- AND a key constraint in both relationships. We cannot implement Option 2 discussed in class, 
+-- since we would have to duplicate the Workout set and create WorkoutContains and WorkoutPerformed
+-- with almost identical information. Therefore, we will focus only on the 

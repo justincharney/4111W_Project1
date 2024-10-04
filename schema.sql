@@ -45,7 +45,7 @@ CREATE TABLE WorkoutExercise(
     ExerciseOrder INTEGER NOT NULL,
     UsesExerciseId INTEGER NOT NULL,
     IncludedInWorkoutId INTEGER NOT NULL,
-    FOREIGN KEY (UsesExercise) REFERENCES Exercise(ExerciseId) ON DELETE CASCADE,.
+    FOREIGN KEY (UsesExercise) REFERENCES Exercise(ExerciseId) ON DELETE CASCADE,
     FOREIGN KEY (IncludedInWorkout) REFERENCES Workout(WorkoutId) ON DELETE CASCADE
 );
 
@@ -68,11 +68,18 @@ CREATE TABLE PerformanceLog(
     RepsCompleted INTEGER,
     WeightUsed FLOAT,
     Estimated1RM FLOAT,
-    PerformedDate DATE,
+    PerformedDate TIMESTAMP, -- I changed this to TIMESTAMP as it is like this in Workout
     Stress INTEGER,
     Soreness INTEGER,
     SleepQuality INTEGER
 );
+
+-- Exercise w/o constraints
+CREATE TABLE Exercise(
+    ExerciseID INTEGER PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL
+);
+
 
 -- Relationship set from here on --
 
@@ -85,11 +92,12 @@ CREATE TABLE Follows(
     FOREIGN KEY (TrainingPlanID) REFERENCES TrainingPlan(TrainingPlanID)
 );
 
--- Performs (User --> Workout)
+-- Performs (User --> Workout): Each User can perform multiple Workouts,
+-- but each Workout can be performed by only one User
 CREATE TABLE Performs(
-    UserID INTEGER,
+    UserID INTEGER NOT NULL,
     WorkoutID INTEGER,
-    PRIMARY KEY (UserID, WorkoutID),
+    PRIMARY KEY (WorkoutID),
     FOREIGN KEY (UserID) REFERENCES User(UserID),
     FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID)
 );

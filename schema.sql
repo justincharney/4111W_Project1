@@ -1,23 +1,24 @@
 CREATE TABLE User(
     UserID INTEGER PRIMARY KEY,
-    Username VARCHAR(50) NOT NULL,
-    Age INTEGER NOT NULL,
-    Gender VARCHAR(1) NOT NULL,
-    BodyWeight DECIMAL(5, 2) NOT NULL -- Can be in the range [-999.99, 999.99],
+    Name VARCHAR(50) NOT NULL,
+    Age INTEGER NOT NULL, -- Need to enforce 13 <= age <= 100
+    Gender VARCHAR(1) NOT NULL, -- Need to enforce this is in the set 'M', 'F', 'O'
+    BodyWeight DECIMAL(5, 2) NOT NULL -- Need to enforce that this is positive
     TrainingHistoryLength INTEGER NOT NULL
 );
 
 CREATE TABLE TrainingPlan(
     TrainingPlanID INTEGER PRIMARY KEY,
-    Level VARCHAR(50) NOT NULL,
-    IsDeload BOOLEAN NOT NULL, -- Can be 0 for False and 1 for True
-    VolumeAdjustmentPercentage DECIMAL(3, 2), -- Can be in the range [-9.99, 9.99]
+    Level VARCHAR(50) NOT NULL, -- Need to enforce this is in the set 'Beginner', 'Intermediate', 'Advanced'
+    IsDeload BOOLEAN NOT NULL,
+    VolumeAdjustmentPercentage DECIMAL(3, 2), -- Need to enforce that this is positive and less than 2.00
 );
 
+-- Need to enforce that one of VolumePercentage or IntensityPercentage are  <= 1.00 for it to be a deload
 CREATE TABLE DeloadTrainingPlan(
     TrainingPlanId INTEGER PRIMARY KEY,
-    VolumePercentage DECIMAL(3, 2) NOT NULL,
-    IntensityPercentage DECIMAL(3, 2) NOT NULL,
+    VolumePercentage DECIMAL(3, 2) NOT NULL, -- Need to enforce that this is positive and <= to 1.00 for it to be a deload
+    IntensityPercentage DECIMAL(3, 2) NOT NULL, -- Need to enforce that this is positive and <= to 1.00 for it to be a deload
     FOREIGN KEY (TrainingPlanId) REFERENCES TrainingPlan(TrainingPlanId) ON DELETE CASCADE,
 );
 
@@ -25,125 +26,66 @@ CREATE TABLE DeloadTrainingPlan(
 -- Added foreign keys for the (exactly one) relationship with TrainingPlan and User.
 CREATE TABLE Workout(
     WorkoutId INTEGER PRIMARY KEY,
-    SequenceNumber INTEGER NOT NULL,
+    SequenceNumber INTEGER NOT NULL, -- Need to enforce this is unique within the context of a TrainingPlanId
     ScheduledDate DATETIME NOT NULL,
-    PerformedDate DATETIME, -- Can be NULL, since we will schedule Workouts to be performed in the future
-    Stress INTEGER NOT NULL,
-    Soreness INTEGER NOT NULL,
-    SleepQuality INTEGER NOT NULL,
+    PerformedDate DATETIME, -- Can be NULL, since we will schedule Workouts to be performed in the future.
+    Stress INTEGER NOT NULL, -- Need to enforce that this is in the range 1 to 5
+    Soreness INTEGER NOT NULL, -- Need to enforce that this is in the range 1 to 5
+    SleepQuality INTEGER NOT NULL, -- Need to enforce that this is in the range 1 to 5
     TrainingPlanId INTEGER NOT NULL,
     PerformingUserId INTEGER NOT NULL,
     FOREIGN KEY (TrainingPlanId) REFERENCES TrainingPlan(TrainingPlanId) ON DELETE CASCADE,
     FOREIGN KEY (PerformingUserId) REFERENCES User(UserId) ON DELETE CASCADE
 );
 
--- Cannot currently capture constraint that MinSets <= MaxSets. Same for MinReps and MaxReps.
+-- Cannot currently capture constraint that MinSets <= MaxSets.
 CREATE TABLE WorkoutExercise(
     WorkoutExerciseId INTEGER PRIMARY KEY,
     MinSets INTEGER NOT NULL,
     MaxSets INTEGER, -- Might be NULL until the workout is started, and then we set this based on their "readiness" score
-    ExerciseOrder INTEGER NOT NULL,
-    UsesExerciseId INTEGER NOT NULL,
-    IncludedInWorkoutId INTEGER NOT NULL,
-    FOREIGN KEY (UsesExercise) REFERENCES Exercise(ExerciseId) ON DELETE CASCADE,
-    FOREIGN KEY (IncludedInWorkout) REFERENCES Workout(WorkoutId) ON DELETE CASCADE
+    ExerciseOrder INTEGER NOT NULL, -- Need to enforce this is unique within the context of a WorkoutId (i.e. no two WorkoutExercises will be in the same 'position' in the Workout)
+    ExerciseName VARCHAR(100) NOT NULL, -- For the relationship with Exercise
+    WorkoutId INTEGER NOT NULL, -- For the relationship with Workout
+    FOREIGN KEY (ExerciseName) REFERENCES Exercise(Name) ON DELETE CASCADE,
+    FOREIGN KEY (WorkoutId) REFERENCES Workout(WorkoutId) ON DELETE CASCADE
 );
 
 -- WorkoutSet is part of a weak entity set, merged with Involves
-CREATE TABLE WorkoutSet_ForWorkoutExercise(
+-- Cannot currently capture constraint that MinReps <= MaxReps.
+CREATE TABLE WorkoutSet(
     WorkoutExerciseId INTEGER,
-    SetId INTEGER, -- Specifies the order of the set in the WorkoutExercise
+    SetOrder INTEGER,
     MinReps INTEGER NOT NULL,
     MaxReps INTEGER NOT NULL,
-    Weight INTEGER, -- Might be NULL for example on the first workout when we have no reference to go on for the weight
-    PRIMARY KEY(WorkoutExerciseId, SetId),
+    TargetWeight DECIMAL(6, 2), -- Might be NULL for example on the first workout when we have no reference to go on for the weight. Need to enforce this is not negative
+    PRIMARY KEY(WorkoutExerciseId, SetOrder),
     FOREIGN KEY (WorkoutExerciseId) REFERENCES WorkoutExercise(WorkoutExerciseId) ON DELETE CASCADE
 );
 
--- PerformanceLog
-CREATE TABLE PerformanceLog(
-    PerformanceLogID INTEGER PRIMARY KEY,
-    DateTime DATETIME,
-    SetsCompleted INTEGER,
-    RepsCompleted INTEGER,
-    WeightUsed FLOAT,
-    Estimated1RM FLOAT
-);
-
--- Exercise 
 CREATE TABLE Exercise(
-    ExerName CHAR(20) PRIMARY KEY,
-    ExerDescription CHAR(100),
-    IsMainLift BOOLEAN
+    Name VARCHAR(100) PRIMARY KEY,
+    Description VARCHAR(250),
+    IsMainLift BOOLEAN NOT NULL
 );
 
+-- Captures the associate relationship (Records) between WorkoutSet and ExercisePerformance
+-- Every ExercisePerformance record must be linked to exactly one WorkoutSet
+CREATE TABLE ExercisePerformance (
+    PerformanceId INTEGER PRIMARY KEY,
+    WorkoutExerciseId INTEGER NOT NULL,
+    SetOrder INTEGER NOT NULL,
+    ActualReps INTEGER NOT NULL, -- Need to enforce that this must be > 0
+    ActualWeightUsed DECIMAL(6, 2) NOT NULL, -- Need to enforce this is positive
+    CompletionTime DATETIME NOT NULL,
+    FOREIGN KEY (WorkoutExerciseId, SetOrder) REFERENCES WorkoutSet(WorkoutExerciseId, SetOrder) ON DELETE CASCADE
+);
 
--- Relationship set from here on --
-
--- Follows (User --> Training Plan): We can't enforce that every User is associated with a TrainingPlan
+-- Relationship set table(s) --
+-- Follows (User --> Training Plan): We can't yet enforce the participation constraint that every User is associated with a TrainingPlan
 CREATE TABLE Follows(
     UserID INTEGER NOT NULL,
     TrainingPlanID INTEGER NOT NULL,
     PRIMARY KEY (UserID, TrainingPlanID), -- Not sure about this!
     FOREIGN KEY (UserID) REFERENCES User(UserID),
-    FOREIGN KEY (TrainingPlanID) REFERENCES TrainingPlan(TrainingPlanID)
+    FOREIGN KEY (TrainingPlanID) REFERENCES TrainingPlan(TrainingPlanID) ON DELETE CASCADE
 );
-
--- Performs (User --> Workout): Each User can perform multiple Workouts,
--- but each Workout can be performed by only one User
-CREATE TABLE Performs(
-    UserID INTEGER NOT NULL,
-    WorkoutID INTEGER,
-    PRIMARY KEY (WorkoutID), -- Key constraint
-    FOREIGN KEY (UserID) REFERENCES User(UserID),
-    FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID)
-);
-
--- Contains (Workout --> WorkoutExercise)
-CREATE TABLE Contains(
-    WorkoutID INTEGER,
-    WorkoutExerciseID INTEGER,
-    PRIMARY KEY (WorkoutID),  -- Key constraint
-    FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID),
-    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID)
-);
-
--- Includes (WorkoutExercise --> Exercise)
-CREATE TABLE Includes(
-    WorkoutExerciseID INTEGER,
-    ExerciseID INTEGER,
-    PRIMARY KEY (WorkoutExerciseID, ExerciseID),
-    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID),
-    FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
-);
-
--- Records (PerformanceLog --> Exercise)
-CREATE TABLE Records(
-    PerformanceLogID INTEGER,
-    ExerciseID INTEGER,
-    PRIMARY KEY (PerformanceLogID, ExerciseID),
-    FOREIGN KEY (PerformanceLogID) REFERENCES PerformanceLog(PerformanceLogID),
-    FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
-);
-
--- Uses (WorkoutExercise --> Exercise)
-CREATE TABLE Uses(
-    WorkoutExerciseID INTEGER NOT NULL,
-    ExerciseID INTEGER NOT NULL,
-    PRIMARY KEY (WorkoutExerciseID),  -- Key Constraint
-    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID),
-    FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
-);
-
-
--- NOTES:
--- 1. Workout is linked to Contains and Performs with a total participation constraint 
--- AND a key constraint in both relationships. We cannot implement Option 2 discussed in class, 
--- since we would have to duplicate the Workout set and create WorkoutContains and WorkoutPerformed
--- with almost identical information. Therefore, we will focus only on the 
-
--- 2. WorkoutExercise could be merged with Uses if standalone in a binary relationship with Exercise,
--- but it is currently involved in a few other relationships, so we will have to omit the
--- participation constraint
-
--- 3.PerformanceLog participation constraint cannot be captured at the moment.

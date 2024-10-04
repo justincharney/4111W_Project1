@@ -57,5 +57,40 @@ CREATE TABLE WorkoutSet_ForWorkoutExercise(
     MaxReps INTEGER NOT NULL,
     Weight INTEGER, -- Might be NULL for example on the first workout when we have no reference to go on for the weight
     PRIMARY KEY(WorkoutExerciseId, SetId),
-    FOREIGN KEY (WorkourExerciseId) REFERENCES WorkoutExercise(WorkoutExerciseId) ON DELETE CASCADE
+    FOREIGN KEY (WorkoutExerciseId) REFERENCES WorkoutExercise(WorkoutExerciseId) ON DELETE CASCADE
 );
+
+-- PerformanceLog w/o constraints
+CREATE TABLE PerformanceLog(
+    PerformanceLogID INTEGER PRIMARY KEY,
+    DateTime DATETIME,
+    SetsCompleted INTEGER,
+    RepsCompleted INTEGER,
+    WeightUsed FLOAT,
+    Estimated1RM FLOAT,
+    PerformedDate DATE,
+    Stress INTEGER,
+    Soreness INTEGER,
+    SleepQuality INTEGER
+);
+
+-- Relationship set from here on --
+
+-- Follows (User --> Training Plan)
+CREATE TABLE Follows(
+    UserID INTEGER,
+    TrainingPlanID INTEGER,
+    PRIMARY KEY (UserID, TrainingPlanID),
+    FOREIGN KEY (UserID) REFERENCES User(UserID),
+    FOREIGN KEY (TrainingPlanID) REFERENCES TrainingPlan(TrainingPlanID)
+);
+
+-- Performs (User --> Workout)
+CREATE TABLE Performs (
+    UserID INTEGER,
+    WorkoutID INTEGER,
+    PRIMARY KEY (UserID, WorkoutID),
+    FOREIGN KEY (UserID) REFERENCES User(UserID),
+    FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID)
+);
+

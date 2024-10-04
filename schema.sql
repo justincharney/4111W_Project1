@@ -72,8 +72,7 @@ CREATE TABLE PerformanceLog(
 
 -- Exercise 
 CREATE TABLE Exercise(
-    ExerciseID INTEGER PRIMARY KEY,
-    ExerName CHAR(20) NOT NULL,
+    ExerName CHAR(20) PRIMARY KEY,
     ExerDescription CHAR(100),
     IsMainLift BOOLEAN
 );

@@ -10,23 +10,23 @@ CREATE TABLE User(
 CREATE TABLE TrainingPlan(
     TrainingPlanID INTEGER PRIMARY KEY,
     Level VARCHAR(50) NOT NULL,
-    IsDeload BIT NOT NULL, -- Can be 0 for False and 1 for True
+    IsDeload BOOLEAN NOT NULL, -- Can be 0 for False and 1 for True Kostas: Apparently, BOOLEAN is preferred in PostgreSQL
     VolumeAdjustmentPercentage DECIMAL(3, 2), -- Can be in the range [-9.99, 9.99]
 );
 
 CREATE TABLE DeloadTrainingPlan(
     TrainingPlanId INTEGER PRIMARY KEY,
-    VolumePercentange DECIMAL(3, 2) NOT NULL,
+    VolumePercentage DECIMAL(3, 2) NOT NULL,
     IntensityPercentage DECIMAL(3, 2) NOT NULL,
     FOREIGN KEY (TrainingPlanId) REFERENCES TrainingPlan(TrainingPlanId) ON DELETE CASCADE,
 );
 
 
 -- Added foreign keys for the (exactly one) relationship with TrainingPlan and User.
-CREATE TABLE WORKOUT(
+CREATE TABLE Workout(
     WorkoutId INTEGER PRIMARY KEY,
     SequenceNumber INTEGER NOT NULL,
-    ScheduluedDate DATETIME NOT NULL,
+    ScheduledDate DATETIME NOT NULL,
     PerformedDate DATETIME, -- Can be NULL, since we will schedule Workouts to be performed in the future
     Stress INTEGER NOT NULL,
     Soreness INTEGER NOT NULL,
@@ -129,3 +129,4 @@ CREATE TABLE Involves(
     FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID),
     FOREIGN KEY (WorkoutSetID) REFERENCES WorkoutSet(WorkoutSetID)
 );
+

@@ -87,7 +87,7 @@ CREATE TABLE Exercise(
 CREATE TABLE Follows(
     UserID INTEGER NOT NULL,
     TrainingPlanID INTEGER NOT NULL,
-    PRIMARY KEY (UserID, TrainingPlanID),
+    PRIMARY KEY (UserID, TrainingPlanID), -- Not sure about this!
     FOREIGN KEY (UserID) REFERENCES User(UserID),
     FOREIGN KEY (TrainingPlanID) REFERENCES TrainingPlan(TrainingPlanID)
 );
@@ -97,7 +97,7 @@ CREATE TABLE Follows(
 CREATE TABLE Performs(
     UserID INTEGER NOT NULL,
     WorkoutID INTEGER,
-    PRIMARY KEY (WorkoutID),
+    PRIMARY KEY (WorkoutID), -- Key constraint
     FOREIGN KEY (UserID) REFERENCES User(UserID),
     FOREIGN KEY (WorkoutID) REFERENCES Workout(WorkoutID)
 );
@@ -129,8 +129,22 @@ CREATE TABLE Records(
     FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
 );
 
+-- Uses (WorkoutExercise --> Exercise)
+CREATE TABLE Uses(
+    WorkoutExerciseID INTEGER NOT NULL,
+    ExerciseID INTEGER NOT NULL,
+    PRIMARY KEY (WorkoutExerciseID),  -- Key Constraint
+    FOREIGN KEY (WorkoutExerciseID) REFERENCES WorkoutExercise(WorkoutExerciseID),
+    FOREIGN KEY (ExerciseID) REFERENCES Exercise(ExerciseID)
+);
 
--- NOTE: Workout is linked to Contains and Performs with a total participation constraint 
+
+-- NOTES:
+-- 1. Workout is linked to Contains and Performs with a total participation constraint 
 -- AND a key constraint in both relationships. We cannot implement Option 2 discussed in class, 
 -- since we would have to duplicate the Workout set and create WorkoutContains and WorkoutPerformed
 -- with almost identical information. Therefore, we will focus only on the 
+
+-- 2. WorkoutExercise could be merged with Uses if standalone in a binary relationship with Exercise,
+-- but it is currently involved in a few other relationships, so we will have to omit the
+-- participation constraint
